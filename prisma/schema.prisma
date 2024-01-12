@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// TODO: Create owner model
+model University {
+  id      String  @id @default(uuid())
+  name    String  @unique
+  code    Int
+  ownerId String  @unique
+  owner   Owner   @relation(fields: [ownerId], references: [id])
+  List    List[]
+  class   Class[]
+}
+
+model Owner {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  password   String
+  university University?
+}
+
+model List {
+  id           String     @id @default(uuid())
+  fullName     String
+  idu          Int        @unique
+  university   University @relation(fields: [universityId], references: [id])
+  universityId String
+}
+
+model Class {
+  id                 String     @id @default(uuid())
+  numberOfInternship Int
+  numberOfRanking    Int
+  numberOfStudent    Int
+  year               Int?
+  state              Boolean
+  university         University @relation(fields: [universityId], references: [id])
+  universityId       String
+
+  Extern          Extern[]
+  Internship      Internship[]
+  ranking         Ranking[]
+  previousRanking PreviousOfRanking[]
+}
+
+model Ranking {
+  id                 String  @id @default(uuid())
+  score              Float
+  extern             Extern  @relation(fields: [externId], references: [id])
+  externId           String  @unique
+  internshipId       String?
+  internshipValue    Float?
+  internshipName     String?
+  numberOfInternship Int?
+  class              Class   @relation(fields: [classId], references: [id])
+  classId            String
+}
+
+model PreviousOfRanking {
+  id                 String  @id @default(uuid())
+  score              Float
+  internshipValue    Float?
+  internshipName     String?
+  numberOfInternship Int?
+  class              Class   @relation(fields: [classId], references: [id])
+  classId            String
+}
+
+model Internship {
+  id               String                 @id @default(uuid())
+  name             String                 @unique
+  class            Class                  @relation(fields: [classId], references: [id])
+  classId          String
+  previous         PreviousOfInternship[]
+  new              NewOfInternship?
+  firstInternship  Rank[]                 @relation("firstInternship")
+  secondInternship Rank[]                 @relation("secondInternship")
+  thirdInternship  Rank[]                 @relation("thirdInternship")
+  fourthInternship Rank[]                 @relation("fourthInternship")
+  fifthInternship  Rank[]                 @relation("fifthInternship")
+  sixthInternship  Rank[]                 @relation("sixthInternship")
+}
+
+model PreviousOfInternship {
+  id              String     @id @default(uuid())
+  average         Float
+  numberOfDemands Int
+  places          Int
+  value           Float
+  internship      Internship @relation(fields: [internshipId], references: [id])
+  internshipId    String
+}
+
+model NewOfInternship {
+  id              String     @id @default(uuid())
+  average         Float?
+  numberOfDemands Int
+  places          Int
+  allocation      Int
+  value           Float?
+  internship      Internship @relation(fields: [internshipId], references: [id])
+  internshipId    String     @unique
+}
+
+model Extern {
+  id                 String       @id @default(uuid())
+  email              String       @unique
+  numberOfInternship Int
+  password           String
+  class              Class        @relation(fields: [classId], references: [id])
+  firstName          String
+  lastName           String
+  idu                Int          @unique
+  classId            String
+  new                NewOfExtern?
+  ranking            Ranking?
+  passwordResetToken String?      @unique
+  passwordResetAt    DateTime?
+
+  rank          Rank[]
+  previous      PreviousOfExtern[]
+  current       CurrentOfExtern[]
+  previousScore PreviousOfScore[]
+}
+
+model Admin {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+}
+
+model Rank {
+  id               String @id @default(uuid())
+  extern           Extern @relation(fields: [externId], references: [id])
+  externId         String @unique
+  numberInternship Int    @default(1)
+
+  firstInternship  Internship? @relation("firstInternship", fields: [first], references: [id])
+  secondInternship Internship? @relation("secondInternship", fields: [second], references: [id])
+  thirdInternship  Internship? @relation("thirdInternship", fields: [third], references: [id])
+  fourthInternship Internship? @relation("fourthInternship", fields: [fourth], references: [id])
+  fifthInternship  Internship? @relation("fifthInternship", fields: [fifth], references: [id])
+  sixthInternship  Internship? @relation("sixthInternship", fields: [sixth], references: [id])
+
+  first  String?
+  second String?
+  third  String?
+  fourth String?
+  fifth  String?
+  sixth  String?
+}
+
+model PreviousOfExtern {
+  id           String  @id @default(uuid())
+  internshipId String
+  cost         Float
+  status       Boolean
+  extern       Extern  @relation(fields: [externId], references: [id])
+  externId     String
+}
+
+model CurrentOfExtern {
+  id           String  @id @default(uuid())
+  internshipId String
+  cost         Float
+  status       Boolean
+  extern       Extern  @relation(fields: [externId], references: [id])
+  externId     String
+}
+
+model NewOfExtern {
+  id           String  @id @default(uuid())
+  internshipId String
+  cost         Float?
+  status       Boolean
+  extern       Extern  @relation(fields: [externId], references: [id])
+  externId     String  @unique
+}
+
+model PreviousOfScore {
+  id       String @id @default(uuid())
+  score    Float
+  extern   Extern @relation(fields: [externId], references: [id])
+  externId String
+}
